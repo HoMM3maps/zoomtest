@@ -31,8 +31,9 @@
         }
 
         #buttonContainer {
-            margin-top: 50px; /* Adjust this to position the buttons lower */
-            display: flex; /* Display buttons in a row */
+            display: flex;
+            margin-top: 70px;
+            margin-bottom: 10px;
         }
 
         #zoomIn, #zoomOut {
@@ -61,17 +62,33 @@
             z-index: 1000;
         }
 
-        #yellowLine {
+        #yellowLine, #yellowLineBelowDropdown {
             width: 300px;
             height: 3px;
             background-color: #EAC15C;
-            margin-top: 10px;
+            margin-top: -10px; /* Added margin-top for spacing */
+            margin-bottom: 10px;
         }
 
-        #canvasContainer {
-            overflow: auto;
-            max-width: 100vw;
-            max-height: 100vh;
+        #tileTypeContainer {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #tileTypeLabel {
+            color: #EAC15C;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        #tileTypeDropdown {
+            padding: 5px 10px;
+            background-color: #EAC15C;
+            color: #342110;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
         }
 
         canvas {
@@ -88,6 +105,16 @@
             <button id="zoomOut">Zoom Out</button>
         </div>
         <div id="yellowLine"></div>
+        <div id="tileTypeContainer">
+            <div id="tileTypeLabel">Tile Type</div>
+            <select id="tileTypeDropdown">
+                <option value="select">Select tile type</option>
+                <option value="terrain">Terrain</option>
+                <option value="objects">Objects</option>
+                <option value="castles">Castles</option>
+            </select>
+        </div>
+        <div id="yellowLineBelowDropdown"></div> <!-- New yellow line below dropdown -->
     </div>
     <canvas id="hexCanvas"></canvas>
     <script src="main.js"></script>
