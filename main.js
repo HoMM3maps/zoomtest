@@ -1,95 +1,90 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagonal Grid with Zoom</title>
-    <style>
-        body {
-            text-align: center;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
+document.addEventListener("DOMContentLoaded", function () {
+    const canvas = document.getElementById('hexCanvas');
+    const ctx = canvas.getContext('2d');
+    const fixedRowCount = 30;
+    const fixedColumnCount = 36.59;
+    let hexagons = [];
+    const zoomLevels = [30, 45, 60, 75];
+    let currentZoomIndex = 0;
+    const backgroundImage = new Image();
+    backgroundImage.src = 'fog.png'; // Replace with your background image path
 
-        #sideRect {
-            position: fixed;
-            right: 0;
-            top: 0;
-            width: 350px;
-            height: 100%;
-            background-color: #342110;
-            border-left: 3px solid #EAC15C;
-            z-index: 500;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 20px;
+    function drawHexagon(x, y, size, highlight = false) {
+        ctx.strokeStyle = highlight ? 'yellow' : 'gray';
+        ctx.lineWidth = highlight ? 3 : 1;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = Math.PI / 3 * i - Math.PI / 6;
+            ctx.lineTo(x + size * Math.cos(angle), y + size * Math.sin(angle));
         }
+        ctx.closePath();
+        ctx.stroke();
+    }
 
-        #buttonContainer {
-            margin-top: 50px; /* Adjust this to position the buttons lower */
-            display: flex; /* Display buttons in a row */
-        }
+    function createHexGrid(hexSize) {
+        const hexWidth = Math.sqrt(3) * hexSize;
+        const hexHeight = 2 * hexSize;
+        canvas.width = fixedColumnCount * hexWidth;
+        canvas.height = fixedRowCount * hexHeight * 3/4;
 
-        #zoomIn, #zoomOut {
-            width: 100px;
-            margin: 5px;
-            padding: 10px;
-            border: none;
-            background-color: #EAC15C;
-            color: #342110;
-            font-size: 16px;
-            cursor: pointer;
+        hexagons = [];
+        for (let col = 0; col < fixedColumnCount; col++) {
+            for (let row = 0; row < fixedRowCount; row++) {
+                const x = col * hexWidth + (row % 2) * hexWidth / 2;
+                const y = row * hexHeight * 3/4;
+                hexagons.push({ x, y, size: hexSize });
+            }
         }
+        redrawGrid();
+    }
 
-        #zoomIn:hover, #zoomOut:hover {
-            background-color: #f2d09b;
-        }
+    function redrawGrid(highlightedHex = null) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = ctx.createPattern(backgroundImage, 'repeat');
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        #topRibbon {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 50px;
-            background-color: #342110;
-            border-bottom: 3px solid #EAC15C;
-            z-index: 1000;
-        }
+        hexagons.forEach(hex => {
+            const isHighlighted = highlightedHex && hex.x === highlightedHex.x && hex.y === highlightedHex.y;
+            drawHexagon(hex.x, hex.y, hex.size, isHighlighted);
+        });
+    }
 
-        #yellowLine {
-            width: 300px;
-            height: 3px;
-            background-color: #EAC15C;
-            margin-top: 10px;
-        }
+    function isInsideHitbox(point, hexCenter, hexSize) {
+        const dx = point.x - hexCenter.x;
+        const dy = point.y - hexCenter.y;
+        return Math.sqrt(dx * dx + dy * dy) < hexSize;
+    }
 
-        #canvasContainer {
-            overflow: auto;
-            max-width: 100vw;
-            max-height: 100vh;
-        }
+    function handleEvent(event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const highlightedHex = hexagons.find(hex => isInsideHitbox({ x, y }, hex, hex.size));
+        redrawGrid(highlightedHex);
+    }
 
-        canvas {
-            display: block;
-            border: 1px solid black;
+    document.getElementById('zoomIn').addEventListener('click', function() {
+        if (currentZoomIndex < zoomLevels.length - 1) {
+            currentZoomIndex++;
+            createHexGrid(zoomLevels[currentZoomIndex]);
         }
-    </style>
-</head>
-<body>
-    <div id="topRibbon"></div>
-    <div id="sideRect">
-        <div id="buttonContainer">
-            <button id="zoomIn">Zoom In</button>
-            <button id="zoomOut">Zoom Out</button>
-        </div>
-        <div id="yellowLine"></div>
-    </div>
-    <canvas id="hexCanvas"></canvas>
-    <script src="main.js"></script>
-</body>
-</html>
+    });
+
+    document.getElementById('zoomOut').addEventListener('click', function() {
+        if (currentZoomIndex > 0) {
+            currentZoomIndex--;
+            createHexGrid(zoomLevels[currentZoomIndex]);
+        }
+    });
+
+    backgroundImage.onload = function() {
+        createHexGrid(zoomLevels[currentZoomIndex]);
+    };
+
+    window.addEventListener('resize', function() {
+        createHexGrid(zoomLevels[currentZoomIndex]);
+    });
+
+    canvas.addEventListener('mousemove', handleEvent);
+    canvas.addEventListener('touchmove', handleEvent);
+});
